@@ -17,14 +17,18 @@ public class AddItemActivity extends AppCompatActivity {
     private EditText itemNameEditText, itemQuantityEditText, itemPriceEditText;
     private Button addItemButton;
     private DatabaseReference itemsReference;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_item);
 
+        // Get the user ID from the Intent
+        userId = getIntent().getStringExtra("USER_ID");
+
         // Initialize Firebase Database reference
-        itemsReference = FirebaseDatabase.getInstance().getReference("shopping_list");
+        itemsReference = FirebaseDatabase.getInstance().getReference("shopping_list").child(userId);
 
         // Initialize views
         itemNameEditText = findViewById(R.id.name);
@@ -51,7 +55,7 @@ public class AddItemActivity extends AppCompatActivity {
             double itemPrice = Double.parseDouble(itemPriceStr);
 
             // Create a new item object (Item class should be defined separately)
-            Item newItem = new Item(itemName, itemQuantity, itemPrice);
+            Item newItem = new Item(userId, itemName, itemQuantity, itemPrice);
 
             // Push the item to Firebase
             String itemId = itemsReference.push().getKey();  // Get a unique key for the item

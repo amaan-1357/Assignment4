@@ -12,6 +12,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -69,9 +70,17 @@ public class LoginActivity extends AppCompatActivity {
         auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        // Navigate to MainActivity (Shopping List Page)
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        finish();  // Close LoginActivity
+                        // Get the user ID of the signed-in user
+                        FirebaseUser user = auth.getCurrentUser();
+                        if (user != null) {
+                            String userId = user.getUid();
+
+                            // Navigate to MainActivity (Shopping List Page) and pass the user ID
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.putExtra("USER_ID", userId);
+                            startActivity(intent);
+                            finish();  // Close LoginActivity
+                        }
                     } else {
                         Toast.makeText(LoginActivity.this, "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }

@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -30,14 +31,23 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseRecyclerAdapter<Item, ItemViewHolder> adapter;
     private DatabaseReference itemsReference;
     private FloatingActionButton addItemButton;
+    private String userId;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Get the user ID from the Intent
+        Intent intent = getIntent();
+        userId = intent.getStringExtra("USER_ID");
+
+        // Initialize FirebaseAuth
+        auth = FirebaseAuth.getInstance();
+
         // Initialize Firebase Database reference
-        itemsReference = FirebaseDatabase.getInstance().getReference("shopping_list");
+        itemsReference = FirebaseDatabase.getInstance().getReference("shopping_list").child(userId);
 
         // Initialize RecyclerView
         recyclerView = findViewById(R.id.recyclerView);
@@ -46,8 +56,19 @@ public class MainActivity extends AppCompatActivity {
         // Initialize FAB
         addItemButton = findViewById(R.id.addItemButton);
         addItemButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, AddItemActivity.class);
-            startActivityForResult.launch(intent);
+            // Start AddItemActivity for result
+            Intent addItemIntent = new Intent(MainActivity.this, AddItemActivity.class);
+            addItemIntent.putExtra("USER_ID", userId);
+            startActivityForResult.launch(addItemIntent);
+        });
+
+        // Initialize Logout Button
+        Button logoutButton = findViewById(R.id.logoutButton);
+        logoutButton.setOnClickListener(v -> {
+            auth.signOut();
+            Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
         });
 
         // Set up FirebaseRecyclerAdapter
@@ -72,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.setAdapter(adapter);
     }
-
 
     @Override
     protected void onStart() {
@@ -102,10 +122,6 @@ public class MainActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<Intent> startActivityForResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), resultCallback);
-
-    public FirebaseRecyclerAdapter<Item, ItemViewHolder> getAdapter() {
-        return adapter;
-    }
 
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView itemName, itemQuantity, itemPrice;
